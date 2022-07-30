@@ -1,0 +1,63 @@
+class: CCompositePotential
+components:
+- class: HernquistPotential
+  name: bulge
+  parameters:
+    c: 1.0
+    c_unit: kpc
+    m: 5000000000.0
+    m_unit: solMass
+  units:
+    angle: rad
+    length: kpc
+    mass: solMass
+    speed/velocity: km / s
+    time: Myr
+- class: MN3ExponentialDiskPotential
+  name: disk
+  parameters:
+    h_R: 2.6
+    h_R_unit: kpc
+    h_z: 0.3
+    h_z_unit: kpc
+    m: 47716664286.85036
+    m_unit: solMass
+  units:
+    angle: rad
+    length: kpc
+    mass: solMass
+    speed/velocity: km / s
+    time: Myr
+- class: HernquistPotential
+  name: nucl
+  parameters:
+    c: 0.06888673680006865
+    c_unit: kpc
+    m: 1814194851.5541859
+    m_unit: solMass
+  units:
+    angle: rad
+    length: kpc
+    mass: solMass
+    speed/velocity: km / s
+    time: Myr
+- class: NFWPotential
+  name: halo
+  parameters:
+    a: 1.0
+    a_unit: ''
+    b: 1.0
+    b_unit: ''
+    c: 1.0
+    c_unit: ''
+    m: 554271110519.767
+    m_unit: solMass
+    r_s: 15.625903558190732
+    r_s_unit: kpc
+  units:
+    angle: rad
+    length: kpc
+    mass: solMass
+    speed/velocity: km / s
+    time: Myr
+type: composite
