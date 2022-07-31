@@ -28,7 +28,7 @@ from pyia import GaiaData
 import gala.dynamics as gd
 import gala.integrate as gi
 import gala.potential as gp
-from gala.dynamics.actionangle.tests.helpers import (
+from gala.dynamics.actionangle.tests.staeckel_helpers import (
     galpy_find_actions_staeckel as find_actions_staeckel
 )
 from schwimmbad.utils import batch_tasks
