@@ -179,7 +179,7 @@ def main(
     source_data_file = pathlib.Path(source_data_file).resolve()
 
     # Global parameters
-    gc_frame = coord.Galactocentric(
+    galcen_frame = coord.Galactocentric(
         galcen_distance=8.275 * u.kpc,
         galcen_v_sun=[8.4, 251.8, 8.4] * u.km/u.s
     )
@@ -198,7 +198,7 @@ def main(
     g = GaiaData(at.QTable.read(source_data_file))
 
     c = g.get_skycoord()
-    galcen = c.transform_to(gc_frame)
+    galcen = c.transform_to(galcen_frame)
     logger.debug("Data loaded...")
 
     Nstars = len(c)
