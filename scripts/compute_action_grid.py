@@ -191,8 +191,8 @@ def main(
     # TODO: should be specifiable somehow!
     # define grids of parameters to loop over (but keep vcirc fixed at 250 or whatever
     # at the solar circle)
-    grid_Md = np.linspace(1e10, 10e10, 9)
-    grid_hz = np.linspace(0.05, 1, 9)
+    grid_Md = np.linspace(3, 7, 5) * 1e10
+    grid_hz = np.linspace(0.1, 0.5, 5)
 
     # Load the source data table:
     g = GaiaData(at.QTable.read(source_data_file))
