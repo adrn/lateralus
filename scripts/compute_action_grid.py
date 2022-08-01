@@ -228,18 +228,34 @@ def main(
     cache_file = cache_path / "pot-grid.hdf5"
     logger.debug(f"Writing to cache file {cache_file}")
 
-    with h5py.File(cache_file, "w") as f:
-        pass
+    if overwrite or not cache_file.exists():
+        with h5py.File(cache_file, "w") as f:
+            pass
 
     all_tasks = []
     for i, disk_m in enumerate(grid_Md):
         for j, disk_hz in enumerate(grid_hz):
             with h5py.File(cache_file, "r+") as f:
                 group_name = f'{i:02d}_{j:02d}'
-                grp = f.create_group(group_name)
+
+                if group_name not in f:
+                    grp = f.create_group(group_name)
+                else:
+                    grp = f[group_name]
+
+                if 'freqs' in grp.keys() and 'ecc' in grp.keys():
+                    i1 = np.all(np.isnan(f["freqs"][:]), axis=1)
+                    i2 = np.isnan(f["ecc"][:])
+                    todo_idx = np.where(i1 & i2)[0]
+                else:
+                    todo_idx = np.arange(Nstars)
+
                 grp.attrs['disk_m'] = disk_m
                 grp.attrs['disk_h_z'] = disk_hz
                 for name, info in meta.items():
+                    if name in grp.keys():
+                        continue
+
                     d = grp.create_dataset(
                         name,
                         shape=info["shape"],
@@ -255,7 +271,6 @@ def main(
                 print(f"Failed to find pot for disk m={disk_m:.1e}, h_z={disk_hz:.2f}")
                 continue
 
-            todo_idx = np.arange(Nstars)
             n_batches = min(8 * max(1, pool.size - 1), len(todo_idx))
             tasks = batch_tasks(
                 n_batches=n_batches,
