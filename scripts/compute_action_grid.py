@@ -231,6 +231,7 @@ def main(
     with h5py.File(cache_file, "w") as f:
         pass
 
+    all_tasks = []
     for i, disk_m in enumerate(grid_Md):
         for j, disk_hz in enumerate(grid_hz):
             with h5py.File(cache_file, "r+") as f:
@@ -261,8 +262,10 @@ def main(
                 arr=todo_idx,
                 args=(galcen, meta, pot, cache_file, group_name, g.source_id),
             )
-            for r in pool.map(worker, tasks, callback=callback):
-                pass
+            all_tasks.extend(tasks)
+
+    for r in pool.map(worker, all_tasks, callback=callback):
+        pass
 
     pool.close()
     sys.exit(0)
