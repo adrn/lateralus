@@ -96,33 +96,33 @@ def worker(task):
             logger.error(f"Failed to compute mean actions {i}\n{str(e)}")
 
         # Other various things:
-        try:
-            rper = orbit.pericenter(approximate=True).to_value(
-                meta["r_per"]["unit"]
-            )
-            rapo = orbit.apocenter(approximate=True).to_value(
-                meta["r_apo"]["unit"]
-            )
+        # try:
+        #     rper = orbit.pericenter(approximate=True).to_value(
+        #         meta["r_per"]["unit"]
+        #     )
+        #     rapo = orbit.apocenter(approximate=True).to_value(
+        #         meta["r_apo"]["unit"]
+        #     )
 
-            all_data["z_max"][n] = orbit.zmax(approximate=True).to_value(
-                meta["z_max"]["unit"]
-            )
-            all_data["r_per"][n] = rper
-            all_data["r_apo"][n] = rapo
-            all_data["ecc"][n] = (rapo - rper) / (rapo + rper)
-        except Exception as e:
-            logger.error(f"Failed to compute zmax peri apo for orbit {i}\n{e}")
+        #     all_data["z_max"][n] = orbit.zmax(approximate=True).to_value(
+        #         meta["z_max"]["unit"]
+        #     )
+        #     all_data["r_per"][n] = rper
+        #     all_data["r_apo"][n] = rapo
+        #     all_data["ecc"][n] = (rapo - rper) / (rapo + rper)
+        # except Exception as e:
+        #     logger.error(f"Failed to compute zmax peri apo for orbit {i}\n{e}")
 
-        # Lz and E
-        try:
-            all_data["L"][n] = np.mean(
-                orbit.angular_momentum().to_value(meta["L"]["unit"]), axis=1
-            )
-            all_data["E"][n] = np.mean(
-                orbit.energy().to_value(meta["E"]["unit"])
-            )
-        except Exception as e:
-            logger.error(f"Failed to compute E Lz for orbit {i}\n{e}")
+        # # Lz and E
+        # try:
+        #     all_data["L"][n] = np.mean(
+        #         orbit.angular_momentum().to_value(meta["L"]["unit"]), axis=1
+        #     )
+        #     all_data["E"][n] = np.mean(
+        #         orbit.energy().to_value(meta["E"]["unit"])
+        #     )
+        # except Exception as e:
+        #     logger.error(f"Failed to compute E Lz for orbit {i}\n{e}")
 
     return idx, cache_file, all_data, group_name
 
@@ -177,6 +177,7 @@ def main(
     cache_path.mkdir(exist_ok=True)
 
     source_data_file = pathlib.Path(source_data_file).resolve()
+    basename = source_data_file.name.split('.')[0]
 
     # Global parameters
     galcen_frame = coord.Galactocentric(
@@ -217,15 +218,15 @@ def main(
         "actions": {"shape": (Nstars, 3), "unit": u.kpc * u.km / u.s},
         "angles": {"shape": (Nstars, 3), "unit": u.rad},
         # Orbit parameters:
-        "z_max": {"shape": (Nstars,), "unit": u.kpc},
-        "r_per": {"shape": (Nstars,), "unit": u.kpc},
-        "r_apo": {"shape": (Nstars,), "unit": u.kpc},
-        "ecc": {"shape": (Nstars,), "unit": u.one},
-        "L": {"shape": (Nstars, 3), "unit": u.kpc * u.km / u.s},
-        "E": {"shape": (Nstars,), "unit": (u.km / u.s) ** 2},
+        # "z_max": {"shape": (Nstars,), "unit": u.kpc},
+        # "r_per": {"shape": (Nstars,), "unit": u.kpc},
+        # "r_apo": {"shape": (Nstars,), "unit": u.kpc},
+        # "ecc": {"shape": (Nstars,), "unit": u.one},
+        # "L": {"shape": (Nstars, 3), "unit": u.kpc * u.km / u.s},
+        # "E": {"shape": (Nstars,), "unit": (u.km / u.s) ** 2},
     }
 
-    cache_file = cache_path / "pot-grid.hdf5"
+    cache_file = cache_path / f"pot-grid-{basename}.hdf5"
     logger.debug(f"Writing to cache file {cache_file}")
 
     if overwrite or not cache_file.exists():
