@@ -137,30 +137,38 @@ def callback(res):
             grp[k][idx] = all_data[k]
 
 
-def get_potential(fiducial_pot, **disk_pars):
+def get_potential(fiducial_pot, eilers, **disk_pars):
     """
     Retrieve a MW potential model with fixed vcirc=229 at Rsun=8.275
     """
     from scipy.optimize import minimize
 
-    def objfunc(val):
+    eilers['xyz'] = np.zeros((len(eilers), 3))
+    eilers['xyz'][:, 0] = eilers['R']
+    def objfunc(vals):
+        m = np.exp(vals[0])
+        r_s = np.exp(vals[1])
         tmp_pot = fiducial_pot.replicate(
             disk=disk_pars,
-            halo={'m': val * 1e11}
+            halo={'m': m, 'r_s': r_s}
         )
         test_v = tmp_pot.circular_velocity(
-            [-8., 0, 0] * u.kpc  # TODO: hard-coded
-        ).to_value(u.km / u.s)[0]
-        return (229. - test_v) ** 2  # TODO: hard-coded
+            eilers['xyz'].data.T,
+        ).to_value(u.km / u.s)
+        return np.sum((eilers['v_c'] - test_v)**2 / eilers['err']**2) + (r_s - 15.)**2 / 5**2
 
-    minit = fiducial_pot['halo'].parameters["m"].to_value(1e11*u.Msun)
-    res = minimize(objfunc, x0=minit, method="powell")
+    x0 = [
+        np.log(fiducial_pot['halo'].parameters["m"].to_value(u.Msun)),
+        np.log(fiducial_pot['halo'].parameters["r_s"].to_value(u.kpc))
+    ]
+
+    res = minimize(objfunc, x0=x0, method="powell")
     if not res.success:
         raise RuntimeError(f"Failed to find potential for disk={disk_pars}")
 
     return fiducial_pot.replicate(
         disk=disk_pars,
-        halo={'m': res.x[0] * 1e11}
+        halo={'m': np.exp(res.x[0]), 'r_s': np.exp(res.x[1])}
     )
 
 
@@ -189,11 +197,14 @@ def main(
     # something??
     fiducial_potential = gp.load('../data/potential.yml')
 
+    # Load Eilers et al. 2019 circ. velocity curve
+    eilers = at.Table.read('../data/elise/eilers_subset.csv')
+
     # TODO: should be specifiable somehow!
     # define grids of parameters to loop over (but keep vcirc fixed at 250 or whatever
     # at the solar circle)
-    grid_Md = np.linspace(3, 9, 5) * 1e10
-    grid_hz = np.linspace(0.05, 0.7, 5)
+    grid_Md = np.linspace(4, 9, 5) * 1e10
+    grid_hz = np.linspace(0.3, 1.1, 5)
 
     # Load the source data table:
     g = GaiaData(at.QTable.read(source_data_file))
@@ -267,7 +278,7 @@ def main(
                         d.attrs["unit"] = str(info["unit"])
 
             try:
-                pot = get_potential(fiducial_potential, m=disk_m, h_z=disk_hz)
+                pot = get_potential(fiducial_potential, eilers, m=disk_m, h_z=disk_hz)
             except RuntimeError:
                 print(f"Failed to find pot for disk m={disk_m:.1e}, h_z={disk_hz:.2f}")
                 continue
